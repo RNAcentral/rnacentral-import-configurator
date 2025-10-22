@@ -1,0 +1,90 @@
+params {
+  notify = {{ notify | lower }}
+  release = {{ release }}
+
+  genome_mapping {
+    run = {{ genome_mapping | lower }}
+    select_mapped.directives.memory = 8.GB
+    blat.directives.memory = 10.GB
+    downloads.directives.memory = 12.GB
+    max_length = 10000
+  }
+
+  cpat.run = {{ cpat | lower }}
+
+  qa {
+{%- if qa %}
+    rfam.run = {{ qa_rfam_run | lower }}
+    rfam.memory = 8.GB
+    dfam.run = {{ qa_dfam_run | lower }}
+    pfam.run = {{ qa_pfam_run | lower }}
+{%- else %}
+    rfam.run = false
+    rfam.memory = 8.GB
+    dfam.run = false
+    pfam.run = false
+{%- endif %}
+  }
+
+  precompute {
+    run = {{ precompute_run | lower }}
+    maxForks = 4
+    range.memory = '8GB'
+{%- if precompute_run %}
+    method = '{{ precompute_method }}'
+{%- else %}
+    method = 'release'
+{%- endif %}
+  }
+
+  r2dt {
+    run = {{ r2dt_run | lower }}
+{%- if r2dt_publish %}
+    publish = "{{ r2dt_publish }}"
+{%- endif %}
+  }
+
+  feedback.run = false
+
+  search_export {
+    max_entries = 50000
+    max_forks = 1
+    memory = '15 GB'
+    publish {
+      host = ''
+      path = ""
+    }
+  }
+  export {
+    search.memory = '16GB'
+    search.run = {{ export_search_run | lower }}
+
+    sequence_search {
+    run = {{ export_sequence_search_run | lower }}
+    max_forks = 10
+    }
+
+    ftp {
+      run = {{ export_ftp_run | lower }}
+    }
+  }
+
+  sequence_search {
+    run = true
+  }
+
+  rfam {
+    run = true
+  }
+}
+
+singularity {
+  enabled = true
+  cacheDir = "$baseDir/singularity"
+  autoMounts = true
+}
+
+includeConfig 'db_selection.config'
+
+includeConfig 'config/cluster.config'
+includeConfig '../profiles.config'

@@ -1,0 +1,22 @@
+params {  
+  databases {
+
+{%- for database, enabled in databases.items() %}
+{%- if database == 'ensembl' %}
+    ensembl {
+      fungi.run = {{ enabled.get('fungi', true) | lower }}
+      metazoa.run = {{ enabled.get('metazoa', true) | lower }}
+      plants.run = {{ enabled.get('plants', true) | lower }}
+      protists.run = {{ enabled.get('protists', true) | lower }}
+      vertebrates.run = {{ enabled.get('vertebrates', true) | lower }}
+    }
+{%- else %}
+    {{ database }}.run = {{ enabled | lower }}
+{%- endif %}
+
+{%- endfor %}
+    expressionatlas.remote = "/nfs/ftp/public/databases/microarray/data/atlas/experiments"
+    psicquic.remote = '/hps/nobackup/agb/rnacentral/release-21/psicquic/psicquic.txt'
+
+  }
+}
