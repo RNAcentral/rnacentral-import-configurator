@@ -4,6 +4,8 @@ Use this tool to build the configuurations for running the RNAcentral import pip
 
 ## Running
 
+You will need the PGDATABASE environment variable exported. This can be found on codon in the slurm profiles used for nextflow. Its a DSN string defining the database connection.
+
 `uv run main.py`
 
 This will then give you a questionnaire about all the databases we might import from for you to select which ones we want to import. 
