@@ -158,6 +158,18 @@ def build_pipeline_configuration():
             "message": "Do you want to run text search export?",
             "default": True,
             "name": "export.search.run"
+        },
+        {
+            "type": "text",
+            "message": "Enter SLURM time limit (HH:MM:SS):",
+            "default": "240:00:00",
+            "name": "time_limit"
+        },
+        {
+            "type": "text",
+            "message": "Enter email for SLURM notifications (leave blank for none):",
+            "default": "",
+            "name": "email"
         }
     ]
     return questions
@@ -207,6 +219,30 @@ def generate_config(template_path, answers):
     config_content = template.render(**template_vars)
     
     return config_content
+
+def transform_slurm_answers(answers):
+    """
+    Transform questionnaire answers to template variables for SLURM script.
+    """
+    release = answers.get('release', '25')
+    
+    return {
+        'time_limit': answers.get('time_limit', '240:00:00'),
+        'email': answers.get('email', ''),
+        'release': release,
+        'job_name': f"Release {release}",
+        'output_file': f"out_release{release}",
+        'error_file': f"err_release{release}",
+    }
+
+def generate_slurm_script(template_path, answers):
+    """Generate SLURM script from template and answers"""
+    # Read the template
+    with open(template_path, 'r') as f:
+        template_content = f.read()
+    template = Template(template_content)
+    template_vars = transform_slurm_answers(answers)
+    return template.render(**template_vars)
 
 def transform_database_answers(answers):
     """
@@ -259,13 +295,19 @@ def main():
     with open("local.config", "w") as f:
         f.write(config_content)
 
-    print("local.config file has been generated.")
+    print("local.config file has been generated!")
 
     database_config = generate_database_config("templates/database_selection.config.jinja", database_selection)
     with open("db_selection.config", "w") as f:
         f.write(database_config)
-
     
+    print("Database selection config file has been generated!")
+
+    run_script = generate_slurm_script("templates/run.sh.jinja", pipeline_configuration)
+    with open("run_pipeline.sh", "w") as f:
+        f.write(run_script)
+
+    print("Pipeline run script has been generated!")
 
 if __name__ == "__main__":
     main()

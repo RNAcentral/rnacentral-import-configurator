@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+#SBATCH --time={{ time_limit }}                  # walltime
+#SBATCH --ntasks=1                       # number of tasks
+#SBATCH --cpus-per-task=4                # number of CPUs Per Task i.e if your code is multi-threaded
+#SBATCH --nodes=1                        # number of nodes
+#SBATCH --mem=16G                        # memory per node
+#SBATCH -J "{{ job_name }}"                  # job name
+#SBATCH -o "{{ output_file }}"               # job output file
+#SBATCH -e "{{ error_file }}"               # job error file
+#SBATCH --mail-user={{ email }}   # email address
+#SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
+
+
+
+set -euo pipefail
+IFS=$'\n\t'
+
+export NXF_OPTS='-Dnxf.pool.type=sync -Dnxf.pool.maxThreads=10000'
+when=$(date +'%Y-%m-%d')
+
+module load nextflow
+NF="nextflow"
+
+rm -f "$when-import.html"
+rm -f "$when-analyze.html"
+rm -f "$when-precompute.html"
+rm -f "$when-export.html"
+rm -f "$when-setup.html"
+rm -f "$when-update-public.html"
+
+$NF  run -with-report "$when-setup.html" -profile prod,slurm  prepare-environment.nf
+
+$NF  run -with-report "$when-import.html" -profile prod,slurm import-data.nf
+
+$NF  run -with-report "$when-analyze.html" -profile prod,slurm analyze.nf
+
+$NF  run -with-report "$when-precompute.html" -profile prod,slurm precompute.nf
+
+$NF run -with-report "$when-export.html" -profile prod,slurm export.nf
+
+$NF run -with-report "$when-update-public.html" -profile prod,slurm update-public.nf
